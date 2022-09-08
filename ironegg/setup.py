@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ironegg",
-    version="1.0.3",
+    version="1.0.7",
     author="xingyang",
     author_email="xing.yang@intel.com",
     description="utils strong like ironegg",
