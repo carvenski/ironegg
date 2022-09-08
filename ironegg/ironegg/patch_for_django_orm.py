@@ -56,10 +56,13 @@ If you use old thread/_thread module to create thread, no patch.
 """
 
 import threading
-from django.db import close_old_connections
-from django.db.backends.mysql import base
-from django.db.backends.mysql.base import DatabaseWrapper
-from sqlalchemy import pool
+try:
+    from django.db import close_old_connections
+    from django.db.backends.mysql import base
+    from django.db.backends.mysql.base import DatabaseWrapper
+    from sqlalchemy import pool
+except:
+    raise Exception("^_^ Please Make Sure [django] and [sqlalchemy] Already Installed.")
 
 def patch_all(**kw):
     # print(PATCH_EXPLAIN)

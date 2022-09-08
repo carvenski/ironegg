@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ironegg",
-    version="1.0.0",
+    version="1.0.3",
     author="xingyang",
     author_email="xing.yang@intel.com",
-    description="my utils strong like ironegg",
+    description="utils strong like ironegg",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/yxzoro/ironegg",
@@ -23,3 +23,7 @@ setuptools.setup(
           'Topic :: Software Development :: Libraries'
       ],
 )
+
+# make pip package and upload to pypi:
+#   python setup.py sdist build
+#   twine upload dist/* 
