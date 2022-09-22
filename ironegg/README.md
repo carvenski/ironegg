@@ -36,6 +36,13 @@ patch django.db.backends.mysql.base.
   Database
   DatabaseWrapper.get_new_connection
 
+# =====
+# Usage
+
+# add this in django settings.py to start patch
+import ironegg
+ironegg.patch_all(pool_size=5, debug=True)
+  
 # ===============
 # Tested versions
 

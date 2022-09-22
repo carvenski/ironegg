@@ -34,6 +34,13 @@ patch threading.Thread.
 patch django.db.backends.mysql.base.
   Database
   DatabaseWrapper.get_new_connection
+
+# =====
+# Usage
+
+# add this in django settings.py to start patch
+import ironegg
+ironegg.patch_all(pool_size=5, debug=True)
   
 # ===============
 # Tested versions
@@ -56,6 +63,7 @@ If you use old thread/_thread module to create thread, no patch.
 """
 
 import sys
+import time
 import threading
 try:
     # python3 use pymysql replace MySQLdb
@@ -73,11 +81,15 @@ except Exception:
 
 def patch_all(**kw):
     # print(PATCH_EXPLAIN)
-    patch_thread()
+    patch_thread(**kw)
     patch_django_mysql_engine(**kw)
 
-def patch_thread():
+
+def patch_thread(**kw):
     print("=== patch threading.Thread")
+
+    # print conn close log for debug
+    DEBUG = kw.get("debug", False)
 
     # patch threading.Thread to add django.db.close_old_connections after user's Thread.run
     def patch_Thread_run(func):
@@ -86,6 +98,8 @@ def patch_thread():
             result = func(*args, **kwargs)
             # then call close conn
             close_old_connections()
+            if DEBUG:
+                print("=== close conn in thread: %s" % threading.current_thread().name)
             return result
         return new_run
 
@@ -104,7 +118,13 @@ def patch_thread():
 
 def patch_django_mysql_engine(**kw):
     print("=== patch django.db.backends.mysql")
-    default_pool_kw = {'poolclass': pool.QueuePool, 
+
+    # print conn connect time for debug
+    DEBUG = kw.get("debug", False)
+    kw.pop("debug")
+
+    default_pool_kw = {
+        'poolclass': pool.QueuePool, 
         'pool_size': 5, 'max_overflow': 0, 'timeout': 10,
         'recycle': 1800, } #'pre_ping': True
     default_pool_kw.update(kw)
@@ -124,12 +144,18 @@ def patch_django_mysql_engine(**kw):
                 if k in conn_params:
                     new_conn_params[k] = conn_params[k]
             # print("### sqlalchemy conn pools status= %s ###" % base.Database.pools)
+            if DEBUG:
+                t0 = time.time()
             connection = func(self, new_conn_params)
+            if DEBUG:
+                t1 = time.time()
+                print("=== connect mysql host: %s | db: %s | time: %s in thread: %s" % (
+                    new_conn_params['host'], new_conn_params['db'] if 'db' in new_conn_params \
+                    else new_conn_params['database'], (t1-t0), threading.current_thread().name
+                ))
             return connection
         return new_func
 
     DatabaseWrapper._old_get_new_connection = DatabaseWrapper.get_new_connection
     DatabaseWrapper.get_new_connection = patch_get_new_connection(DatabaseWrapper._old_get_new_connection)
-
-
 
